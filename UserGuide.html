@@ -92,7 +92,7 @@ Interested? Jump to the <a href="#quick-start">Section 2, &#8220;Quick Start&#82
 <p>Ensure you have Java <code>11</code> or above installed in your Computer.</p>
 </li>
 <li>
-<p>Download the latest <code>addressbook.jar</code> <a href="{https://github.com/AY1920S1-CS2103-F09-4/main/releases">here</a>.</p>
+<p>Download the latest <code>addressbook.jar</code> <a href="https://github.com/AY1920S1-CS2103-F09-4/main/releases">here</a>.</p>
 </li>
 <li>
 <p>Copy the file to the folder you want to use as the home folder for your Address Book.</p>
@@ -274,16 +274,14 @@ the example above).
 </table>
 </div>
 <div class="paragraph">
-<p>Persons and policies can easily be retrieved using the various <code>find</code> functions, whether by <strong>keyword</strong> or by <strong>tag</strong>.</p>
+<p>Persons and policies can easily be retrieved using the various <code>find</code> functions, whether by <strong>keyword</strong> or by <strong>tag</strong>.
+Let&#8217;s find a person and add a "senior" tag to the person.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code>find John</code></pre>
+<pre class="CodeRay highlight"><code>find John
+addtag 1 t/senior</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>The various functions outlined in the following section are available to further help the user manage contacts and policies.
-These include additional functions to help the user gather insights, rectify mistakes and validate input among others.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -292,12 +290,15 @@ These include additional functions to help the user gather insights, rectify mis
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
- Note that indices are always based off the latest view of persons/policies i.e. if the user keys in a <code>find</code>
-command, indices to subsequent person-related commands will be based off the resulting list of persons from the
-<code>find</code> command. The same applies for policies.
+Note that the index of <code>addtag</code> refers to the resulting list from the previous <code>find</code> command. Indices of persons
+are always based off the latest view of the person page. The same applies for policies.
 </td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>The various functions outlined in the following section are available to further help the user manage contacts and policies.
+These include additional functions to help the user gather insights, rectify mistakes and validate input among others.</p>
 </div>
 </div>
 </div>
@@ -2035,4 +2036,4 @@ e.g. <code>binitemexpiry days/30</code></p>
 </ul>
 </div>
 </div>
-</div></div><div id="footer"><div class="container"><div id="footer-text">Last updated 2019-11-09 03:55:45 UTC</div></div></div></body></html>
+</div></div><div id="footer"><div class="container"><div id="footer-text">Last updated 2019-11-09 04:19:47 UTC</div></div></div></body></html>
