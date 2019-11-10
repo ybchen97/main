@@ -27,9 +27,10 @@
 <li><a href="#bin-feature">3.3. Bin Feature</a></li>
 <li><a href="#command-history-feature">3.4. Command History Feature</a></li>
 <li><a href="#undo-redo-feature">3.5. Undo/Redo Feature</a></li>
-<li><a href="#proposed-data-encryption">3.6. [Proposed] Data Encryption</a></li>
-<li><a href="#logging">3.7. Logging</a></li>
-<li><a href="#Implementation-Configuration">3.8. Configuration</a></li>
+<li><a href="#eligibility-feature">3.6. Eligibility Feature</a></li>
+<li><a href="#proposed-data-encryption">3.7. [Proposed] Data Encryption</a></li>
+<li><a href="#logging">3.8. Logging</a></li>
+<li><a href="#Implementation-Configuration">3.9. Configuration</a></li>
 </ul>
 </li>
 <li><a href="#documentation">4. Documentation</a></li>
@@ -40,12 +41,12 @@
 <li><a href="#use-cases">Appendix C: Use Cases</a></li>
 <li><a href="#non-functional-requirements">Appendix D: Non Functional Requirements</a></li>
 <li><a href="#glossary">Appendix E: Glossary</a></li>
-<li><a href="#product-survey">Appendix F: Product Survey</a></li>
-<li><a href="#instructions-for-manual-testing">Appendix G: Instructions for Manual Testing</a>
+<li><a href="#instructions-for-manual-testing">Appendix F: Instructions for Manual Testing</a>
 <ul class="sectlevel2">
-<li><a href="#launch-and-shutdown">G.1. Launch and Shutdown</a></li>
-<li><a href="#deleting-a-person">G.2. Deleting a person</a></li>
-<li><a href="#saving-data">G.3. Saving data</a></li>
+<li><a href="#launch-and-shutdown">F.1. Launch and Shutdown</a></li>
+<li><a href="#deleting-a-person">F.2. Deleting a person</a></li>
+<li><a href="#saving-data">F.3. Saving data</a></li>
+<li><a href="#displaying-indicators">F.4. Displaying indicators</a></li>
 </ul>
 </li>
 </ul>
@@ -765,9 +766,8 @@ operations are called only from within Bin.</p>
 <h4 id="implementation-5"><a class="link" href="#implementation-5">3.4.1. Implementation</a></h4>
 <div class="paragraph">
 <p>To allow users to view the list of previously entered commands, a command history mechanism is implemented, which
-lists down all the previous commands entered by the user from the point of starting the application. This feature
-can be accessed using the <code>history</code> command, and it does not show invalid commands or the commands which were autocorrected
-into valid ones. The feature is supported by the <code>CommandHistory</code> class, an instance of which is stored as one of the
+lists down all the previous (valid) commands entered by the user from the point of starting the application. Commands entered
+while merging are not added. The feature is supported by the <code>CommandHistory</code> class, an instance of which is stored as one of the
 memory objects inside <code>ModelManager</code>. The main operations implemented by this class are:</p>
 </div>
 <div class="ulist">
@@ -777,32 +777,13 @@ memory objects inside <code>ModelManager</code>. The main operations implemented
 <code>commandText</code> into the list of previously entered commands <code>userInputHistory</code>.</p>
 </li>
 <li>
-<p><code>getHistory()</code>&#8201;&#8212;&#8201;Reverses the list of previously entered commands and returns it.</p>
+<p><code>getHistory()</code>&#8201;&#8212;&#8201;Reverses the list of previously entered commands and returns the list.</p>
 </li>
 </ul>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="images/CommandHistoryClassDiagram.png" alt="CommandHistoryClassDiagram">
-</div>
 </div>
 <div class="paragraph">
 <p>The history view is accompanied by its associated <code>HistoryCard</code> and <code>HistoryListPanel</code> FXML. These views share a common CSS
 with other FXML files.</p>
-</div>
-<div class="paragraph">
-<p>Given below is an example usage scenario and how the command history mechanism works at each step.</p>
-</div>
-<div class="paragraph">
-<p>Step 1. The user enters the <code>history</code> command to display the list of previously entered commands, starting from
-the most recent. This results in <code>HistoryCommand::execute()</code> returning a <code>CommandResult</code> with the <code>listHistory</code> attribute
-set as true.</p>
-</div>
-<div class="paragraph">
-<p>Step 2. The <code>CommandResult</code> object is then passed into <code>MainWindow</code> through <code>LogicManager</code>.</p>
-</div>
-<div class="paragraph">
-<p>Step 3. The <code>MainWindow</code> creates a new <code>HistoryListPanel</code> object with the list of commands as <code>logic.getHistoryList()</code>.</p>
 </div>
 <div class="paragraph">
 <p>Following is the sequence diagram that shows the interaction between different components of the app when the command
@@ -812,14 +793,6 @@ set as true.</p>
 <div class="content">
 <img src="images/CommandHistorySequenceDiagram.png" alt="CommandHistorySequenceDiagram">
 </div>
-</div>
-<div class="paragraph">
-<p>Step 4. The <code>HistoryListPanel</code> object then initialises all the attributes of the associated FXML object, following which this
-component is placed in the secondary panel display.</p>
-</div>
-<div class="paragraph">
-<p>Step 5. Finally, the <code>MainWindow</code> calls <code>StackPane::getChildren::add</code> to add <code>HistoryListPanel::getRoot</code> to place the
-history list panel into the secondary display screen.</p>
 </div>
 </div>
 <div class="sect3">
@@ -838,7 +811,7 @@ not being passed around between the <code>LogicManager</code> and the <code>Mode
 </li>
 <li>
 <p>Cons: By right the <code>LogicManager</code> is only concerned with handling logic, any data storage should be performed in
-<code>ModelManager</code>. Storing command history here would violate Single Responsibility Principle and Separation of Concerns.</p>
+<code>ModelManager</code>. Violates Single Responsibility Principle and Separation of Concerns.</p>
 </li>
 </ul>
 </div>
@@ -880,14 +853,14 @@ feature to undo/redo application.</p>
 </div>
 </li>
 <li>
-<p><strong>Alternative 2:</strong> Display every valid command entered by the user</p>
+<p><strong>Alternative 2 (current choice):</strong> Display every valid command entered by the user</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Pros: More accurate representation of command history, every command entered is a part of the history</p>
+<p>Pros: More accurate representation of command history.</p>
 </li>
 <li>
-<p>Cons: Clutters the command history with unnecessary commands like <code>history</code> and <code>undo</code>.</p>
+<p>Cons: Clutters the command history with potentially unnecessary commands.</p>
 </li>
 </ul>
 </div>
@@ -903,25 +876,8 @@ feature to undo/redo application.</p>
 <h4 id="implementation-6"><a class="link" href="#implementation-6">3.5.1. Implementation</a></h4>
 <div class="paragraph">
 <p>To allow users to revert/return to a previous/future state of the address book, an undo/redo mechanism is implemented, which
-undoes/redoes the last data change made in the application. This feature can be performed using the <code>undo</code> or <code>redo</code>
-command, and it performs an undo or a redo only when possible. The feature is supported by the <code>StatefulAddressBook</code> class,
-an instance of which is stored as one of the memory objects inside <code>ModelManager</code>. The main operations implemented by this class are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>StatefulAddressBook#saveAddressBookState()</code>&#8201;&#8212;&#8201;Adds an address book with the current state to the list <code>statefulAddressBookList</code>. Also
-clears states after the <code>currentStatePointer</code> and updates it by one.</p>
-</li>
-<li>
-<p><code>StatefulAddressBook#undo()</code>&#8201;&#8212;&#8201;Reverts the <code>currentStatePointer</code> to the previous one, and resets the address book to use the one pointed
-by <code>currentStatePointer</code>.</p>
-</li>
-<li>
-<p><code>StatefulAddressBook#redo()</code>&#8201;&#8212;&#8201;Increments the <code>currentStatePointer</code> to the future one, and resets the address book to use the one pointed
-by <code>currentStatePointer</code>.</p>
-</li>
-</ul>
+undoes/redoes the last data change made in the application. The feature is supported by the <code>StatefulAddressBook</code> class,
+an instance of which is stored as one of the memory objects inside <code>ModelManager</code>.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -930,11 +886,6 @@ by <code>currentStatePointer</code>.</p>
 </div>
 <div class="paragraph">
 <p>Given below is an example usage scenario and how the undo-redo mechanism works at each step. Let us assume that <code>StatefulAddressBook</code> has just been initialised.</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="images/UndoRedoState0.png" alt="UndoRedoState0">
-</div>
 </div>
 <div class="paragraph">
 <p>Step 1. The user makes some data changes. This adds a list of states to our <code>StatefulAddressBook</code>, and updates the
@@ -946,8 +897,7 @@ by <code>currentStatePointer</code>.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Step 2. User types <code>undo</code>. This invokes the <code>UndoCommand::execute</code> method, which further invokes the <code>StatefulAddressBook::undo</code>
-method. The <code>currentStatePointer</code> is decremented, and the address book is reset to the one being pointed to by
+<p>Step 2. User types <code>undo</code>. The <code>currentStatePointer</code> is decremented, and the address book is reset to the one being pointed to by
 <code>currentStatePointer</code>.</p>
 </div>
 <div class="imageblock">
@@ -965,16 +915,8 @@ and a new state is added.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Step 3b. If a command which does not perform a data change is called, nothing happens in the <code>StatefulAddressBook</code>.</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="images/UndoRedoState3b.png" alt="UndoRedoState3b">
-</div>
-</div>
-<div class="paragraph">
-<p>Step 3c. If a <code>redo()</code> is called, then the <code>currentStatePointer</code> is incremented, and the address book is reset to the one
-being pointed to by <code>currentStatePointer</code>.</p>
+<p>Step 3b. If a command which does not perform a data change is called, <code>StatefulAddressBook</code> stays the same
+as seen in <code>Step 2</code>. If a <code>redo()</code> is called, then the <code>currentStatePointer</code> is incremented.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -986,8 +928,7 @@ being pointed to by <code>currentStatePointer</code>.</p>
 the resulting changes now reflected.</p>
 </div>
 <div class="paragraph">
-<p>Following is an activity diagram which shows the execution when the user makes in a data change or types in the <code>undo</code>
-command. The diagram for a <code>redo</code> command will be similar.</p>
+<p>Following is the activity diagram. The diagram for a <code>redo</code> command will be similar.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -1045,35 +986,115 @@ when we try to undo a command.</p>
 </ul>
 </div>
 </div>
-<div class="sect4">
-<h5 id="aspect-data-structure-to-support-the-undo-redo-commands"><a class="link" href="#aspect-data-structure-to-support-the-undo-redo-commands">Aspect: Data structure to support the undo/redo commands</a></h5>
+</div>
+</div>
+<div class="sect2">
+<h3 id="eligibility-feature"><a class="link" href="#eligibility-feature">3.6. Eligibility Feature</a></h3>
+<div class="sect3">
+<h4 id="implementation-7"><a class="link" href="#implementation-7">3.6.1. Implementation</a></h4>
+<div class="paragraph">
+<p>Eligibility was implemented as part of the overall search feature. It comprises the following two separate but related
+functionalities: searching for eligible policies given a person and searching for eligible people given a policy. These
+features can be accessed by the user from the <code>eligiblepolicies</code> and <code>eligiblepeople</code> commands respectively. The feature
+is supported by the <code>Person</code>, <code>Policy</code> and <code>Tag</code>, <code>StartAge</code> and <code>EndAge</code> classes from the model component. The
+eligibility functionality is supported by the following main operations:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Alternative 1 (current choice):</strong> Use a list to store the history of address book states.</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Pros: Easy for new Computer Science student undergraduates to understand, who are likely to be the new incoming
-developers of our project.</p>
+<p><code>Policy#isEligible(Person person)</code>&#8201;&#8212;&#8201;Checks if a person is eligible for the policy the method is called from</p>
 </li>
 <li>
-<p>Cons: Logic is duplicated twice. For example, when a new command is executed, we must remember to update both
-HistoryManager and VersionedAddressBook.</p>
+<p><code>Policy#isEligibleAge(int age)</code>&#8201;&#8212;&#8201;Checks if an age is eligible for the policy the method is called from</p>
+</li>
+<li>
+<p><code>Person#getTags()</code>&#8201;&#8212;&#8201;Returns a <code>Set&lt;Tag&gt;</code> of all the tags a person possesses</p>
+</li>
+<li>
+<p><code>Tag#equals(Object other)</code>&#8201;&#8212;&#8201;Checks if a tag is equal to another object</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The following is a class diagram illustrating the relationship between the classes involved in determining eligibility:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/EligibilityClassDiagram.png" alt="EligibilityClassDiagram">
+</div>
+</div>
+<div class="paragraph">
+<p>Given below is an example usage scenario of <code>eligiblepeople</code> and how the eligibility mechanism works at each step. The
+eligibility mechanism for <code>eligiblepolicies</code> is similar.</p>
+</div>
+<div class="paragraph">
+<p>Step 1. The user enters the <code>eligiblepeople</code> command with a valid policy index (e.g. <code>eligiblepeople 1</code>) to display the
+list of people eligible for the policy, resulting in the <code>EligiblePeopleCommand#execute()</code> command being called.</p>
+</div>
+<div class="paragraph">
+<p>Step 2. A <code>PersonEligibleForPolicy</code> predicate is created from the specified policy and passed into the
+<code>model#updateFilteredPersonList</code> command.</p>
+</div>
+<div class="paragraph">
+<p>Step 3. The <code>FilteredList</code> object entitled 'filteredList' is then updated through testing of each person with
+<code>PersonEligibleForPolicyPredicate#test(Person person)</code>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>For each iteration, the <code>Policy#isEligible(Person person)</code> method is called, which checks if the person
+possesses all the policy&#8217;s criteria in its tags (from <code>Person#getTags()</code>) and that his or her age (calculated from his
+date of birth), lies between the policy&#8217;s start and end age.</p>
+</li>
+<li>
+<p>If both of these conditions are met, the item passes the predicate and remains on the filtered list; otherwise it is
+removed.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Step 4. The <code>EligiblePeopleCommand#execute()</code> method returns a <code>CommandResult</code> with the <code>listPeople</code> attribute set as true.</p>
+</div>
+<div class="paragraph">
+<p>Following is the sequence diagram that illustrates the above process:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/EligibilitySequenceDiagram.png" alt="EligibilitySequenceDiagram">
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="design-considerations-6"><a class="link" href="#design-considerations-6">3.6.2. Design Considerations</a></h4>
+<div class="sect4">
+<h5 id="aspect-format-to-store-criteria"><a class="link" href="#aspect-format-to-store-criteria">Aspect: Format to store criteria</a></h5>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Alternative 1 (current choice):</strong> Store each criteria as a <code>Tag</code> object</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Pros: Since criteria are stored as tags, checking to see if a person&#8217;s tag and a policy&#8217;s criterion match is extremely
+simple, utilizing the <code>Tag#equals(Other object)</code> method. Repetition of code can therefore be avoided.</p>
+</li>
+<li>
+<p>Cons: Future developers unaware of this design choice may be confused by the method of checking eligibility.</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>Alternative 2:</strong> Use HistoryManager (a history of commands) for undo/redo</p>
+<p><strong>Alternative 2:</strong> Create a separate <code>Criteria</code> class for criteria</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Pros: We do not need to maintain a separate list, and just reuse what is already in the codebase.</p>
+<p>Pros: Separation of concerns and Single Responsibility Principle for <code>Tag</code> and <code>Criteria</code> is maintained.</p>
 </li>
 <li>
-<p>Cons: Requires dealing with commands that have already been undone: We must remember to skip these commands.
-Violates Single Responsibility Principle and Separation of Concerns as HistoryManager now needs to do two different things.</p>
+<p>Cons: An equivalence function will need to be written to compare <code>Tag</code> and <code>Criteria</code> objects, which is unnecessary
+code to be written and maintained. Increases coupling between <code>Tag</code> and <code>Criteria</code>, changing the format of one will
+inevitably need to be reflected in the other. Failing to do so would introduce bugs.</p>
 </li>
 </ul>
 </div>
@@ -1084,20 +1105,20 @@ Violates Single Responsibility Principle and Separation of Concerns as HistoryMa
 </div>
 </div>
 <div class="sect2">
-<h3 id="proposed-data-encryption"><a class="link" href="#proposed-data-encryption">3.6. [Proposed] Data Encryption</a></h3>
+<h3 id="proposed-data-encryption"><a class="link" href="#proposed-data-encryption">3.7. [Proposed] Data Encryption</a></h3>
 <div class="paragraph">
 <p><em>{Explain here how the data encryption feature will be implemented}</em></p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="logging"><a class="link" href="#logging">3.7. Logging</a></h3>
+<h3 id="logging"><a class="link" href="#logging">3.8. Logging</a></h3>
 <div class="paragraph">
 <p>We are using <code>java.util.logging</code> package for logging. The <code>LogsCenter</code> class is used to manage the logging levels and logging destinations.</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>The logging level can be controlled using the <code>logLevel</code> setting in the configuration file (See <a href="#Implementation-Configuration">Section 3.8, &#8220;Configuration&#8221;</a>)</p>
+<p>The logging level can be controlled using the <code>logLevel</code> setting in the configuration file (See <a href="#Implementation-Configuration">Section 3.9, &#8220;Configuration&#8221;</a>)</p>
 </li>
 <li>
 <p>The <code>Logger</code> for a class can be obtained using <code>LogsCenter.getLogger(Class)</code> which will log messages according to the specified logging level</p>
@@ -1128,7 +1149,7 @@ Violates Single Responsibility Principle and Separation of Concerns as HistoryMa
 </div>
 </div>
 <div class="sect2">
-<h3 id="Implementation-Configuration"><a class="link" href="#Implementation-Configuration">3.8. Configuration</a></h3>
+<h3 id="Implementation-Configuration"><a class="link" href="#Implementation-Configuration">3.9. Configuration</a></h3>
 <div class="paragraph">
 <p>Certain properties of the application can be controlled (e.g user prefs file location, logging level) through the configuration file (default: <code>config.json</code>).</p>
 </div>
@@ -1487,31 +1508,24 @@ Violates Single Responsibility Principle and Separation of Concerns as HistoryMa
 </div>
 <h3 id="use-case-edit-person" class="discrete">Use case: Edit person</h3>
 <div class="paragraph">
-<p>Guarantees:<br></p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Person is edited even if input fields might be invalid (see 3a).</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
 <p><strong>MSS</strong></p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>User requests to find a person</p>
+<p>User requests to list persons.</p>
 </li>
 <li>
-<p>Insurelytics shows details of the person</p>
+<p>Insurelytics shows a list of persons.</p>
 </li>
 <li>
-<p>User requests to edit that specific person.</p>
+<p>User requests to edit a specific person in the list.</p>
 </li>
 <li>
 <p>Insurelytics edits the person.</p>
+</li>
+<li>
+<p>The person&#8217;s edited details are now visible in the address book.</p>
 <div class="paragraph">
 <p>Use case ends.</p>
 </div>
@@ -1524,41 +1538,23 @@ Violates Single Responsibility Principle and Separation of Concerns as HistoryMa
 <div class="ulist none">
 <ul class="none">
 <li>
-<p>1a. Person is not found</p>
-<div class="ulist none">
-<ul class="none">
-<li>
-<p>1a1. Insurelytics shows an error message.</p>
+<p>2a. The list is empty.</p>
 <div class="paragraph">
-<p>Use case resumes at step 1.</p>
-</div>
-</li>
-</ul>
+<p>Use case ends.</p>
 </div>
 </li>
 <li>
-<p>3a. Either of the given NRIC, contact number, or email address is invalid.</p>
+<p>3a. The given index is invalid.</p>
+</li>
+<li>
+<p>3b. The given edited details are invalid.</p>
 <div class="ulist none">
 <ul class="none">
 <li>
-<p>3a1. Insurelytics adds the person into address book.</p>
-</li>
-<li>
-<p>3a2. Insurelytics shows a warning.</p>
-</li>
-</ul>
+<p>3*1. Insurelytics shows an error message.</p>
+<div class="paragraph">
+<p>Use case resumes at step 2.</p>
 </div>
-</li>
-<li>
-<p>*a. At any time, User requests to cancel the edit.</p>
-<div class="ulist none">
-<ul class="none">
-<li>
-<p>*a1. Address books requests to confirm the cancellation.</p>
-</li>
-<li>
-<p>*a1. User confirms the cancellation.
-Use case ends.</p>
 </li>
 </ul>
 </div>
@@ -1624,16 +1620,16 @@ Use case ends.</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>User requests to list persons</p>
+<p>User requests to list persons.</p>
 </li>
 <li>
-<p>Insurelytics shows a list of persons</p>
+<p>Insurelytics shows a list of persons.</p>
 </li>
 <li>
-<p>User requests to assign a policy to a specific person</p>
+<p>User requests to assign a policy to a specific person.</p>
 </li>
 <li>
-<p>The policy gets assigned to the person</p>
+<p>The policy gets assigned to the person.</p>
 <div class="paragraph">
 <p>Use case ends.</p>
 </div>
@@ -1653,10 +1649,16 @@ Use case ends.</p>
 </li>
 <li>
 <p>3a. The given index is invalid.</p>
+</li>
+<li>
+<p>3b. The person is not eligible for the policy.</p>
+</li>
+<li>
+<p>3c. The policy is not present in the global list of policies.</p>
 <div class="ulist none">
 <ul class="none">
 <li>
-<p>3a1. Insurelytics shows an error message.</p>
+<p>3*1. Insurelytics shows an error message.</p>
 <div class="paragraph">
 <p>Use case resumes at step 2.</p>
 </div>
@@ -1664,14 +1666,44 @@ Use case ends.</p>
 </ul>
 </div>
 </li>
+</ul>
+</div>
+<h3 id="use-case-undoing-a-data-change" class="discrete">Use case: Undoing a data change</h3>
+<div class="paragraph">
+<p><strong>MSS</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>3b. The person is not eligible for the policy.</p>
+<p>User enters a command.</p>
+</li>
+<li>
+<p>Insurelytics performs the entered command.</p>
+</li>
+<li>
+<p>User requests to undo the previously entered command.</p>
+</li>
+<li>
+<p>The previously entered command gets undone and the data is reverted back to the previous state.</p>
+<div class="paragraph">
+<p>Use case ends.</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Extensions</strong></p>
+</div>
 <div class="ulist none">
 <ul class="none">
 <li>
-<p>3b1. Insurelytics shows an error message and returns a list of policies the person is eligible for.</p>
+<p>3a. The previously entered command did not perform a data change.</p>
+<div class="ulist none">
+<ul class="none">
+<li>
+<p>3a1. Insurelytics shows an error message.</p>
 <div class="paragraph">
-<p>Use case resumes at step 2.</p>
+<p>Use case ends.</p>
 </div>
 </li>
 </ul>
@@ -1813,7 +1845,7 @@ Use case ends.</p>
 <dl>
 <dt class="hdlist1"><a id="mainstream-os"></a> Mainstream OS</dt>
 <dd>
-<p>Windows, Linux, Unix, OS-X</p>
+<p>Windows, Linux, Unix, macOS</p>
 </dd>
 <dt class="hdlist1"><a id="private-contact-detail"></a> Private contact detail</dt>
 <dd>
@@ -1824,44 +1856,7 @@ Use case ends.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="product-survey"><a class="link" href="#product-survey">Appendix F: Product Survey</a></h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p><strong>Product Name</strong></p>
-</div>
-<div class="paragraph">
-<p>Author: &#8230;&#8203;</p>
-</div>
-<div class="paragraph">
-<p>Pros:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>&#8230;&#8203;</p>
-</li>
-<li>
-<p>&#8230;&#8203;</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Cons:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>&#8230;&#8203;</p>
-</li>
-<li>
-<p>&#8230;&#8203;</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="instructions-for-manual-testing"><a class="link" href="#instructions-for-manual-testing">Appendix G: Instructions for Manual Testing</a></h2>
+<h2 id="instructions-for-manual-testing"><a class="link" href="#instructions-for-manual-testing">Appendix F: Instructions for Manual Testing</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Given below are instructions to test the app manually.</p>
@@ -1879,7 +1874,7 @@ These instructions only provide a starting point for testers to work on; testers
 </table>
 </div>
 <div class="sect2">
-<h3 id="launch-and-shutdown"><a class="link" href="#launch-and-shutdown">G.1. Launch and Shutdown</a></h3>
+<h3 id="launch-and-shutdown"><a class="link" href="#launch-and-shutdown">F.1. Launch and Shutdown</a></h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -1917,7 +1912,7 @@ Expected: The most recent window size and location is retained.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="deleting-a-person"><a class="link" href="#deleting-a-person">G.2. Deleting a person</a></h3>
+<h3 id="deleting-a-person"><a class="link" href="#deleting-a-person">F.2. Deleting a person</a></h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -1951,7 +1946,7 @@ Expected: Similar to previous.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="saving-data"><a class="link" href="#saving-data">G.3. Saving data</a></h3>
+<h3 id="saving-data"><a class="link" href="#saving-data">F.3. Saving data</a></h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -1970,5 +1965,38 @@ Expected: Similar to previous.</p>
 <p><em>{ more test cases &#8230;&#8203; }</em></p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="displaying-indicators"><a class="link" href="#displaying-indicators">F.4. Displaying indicators</a></h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Indicators are up to date and shown in the correct format</p>
+<div class="olist loweralpha">
+<ol class="loweralpha" type="a">
+<li>
+<p>Test case:<br>
+ <code>display i/policy-popularity-breakdown f/piechart</code><br>
+ <code>addpolicy n/Child Care d/Care for children c/days/20 months/11 years/5 pr/$50000 sa/0 ea/10</code><br>
+Expected: Popularity of child care policy should be 0. Format of indicator should be piechart.</p>
+</li>
+<li>
+<p>Test case:<br>
+    <code>display i/age-group-breakdown f/linechart</code><br>
+    <code>add n/Norman ic/S0000001J p/98765432 e/johnd@example.com a/311, Clementi Ave 2, #02-25 dob/12.12.2000 g/Male</code><br>
+   Expected: Number of people in the age group below 20 years old should increase by 1.
+Format of indicator should be linechart.</p>
+</li>
+<li>
+<p>Test case:<br>
+ <code>display i/gender-breakdown f/barchart</code><br>
+ <code>add n/Sally ic/S0000001J p/98765432 e/johnd@example.com a/311, Clementi Ave 2, #02-25 dob/12.12.2000 g/Female</code><br>
+Expected: Number of females should increase by 1. Format of indicator should be barchart.</p>
+</li>
+</ol>
 </div>
-</div></div><div id="footer"><div class="container"><div id="footer-text">Last updated 2019-11-09 18:07:21 UTC</div></div></div></body></html>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div></div><div id="footer"><div class="container"><div id="footer-text">Last updated 2019-11-10 13:08:24 UTC</div></div></div></body></html>
